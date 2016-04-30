@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>glia by tingliu</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>glia</h1>
+        <h2>Graph Learning Library for Image Analysis</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/tingliu/glia/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/tingliu/glia/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/tingliu/glia" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a id="glia-graph-learning-library-for-image-analysis" class="anchor" href="#glia-graph-learning-library-for-image-analysis" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong>GLIA</strong>: <strong>G</strong>raph <strong>L</strong>earning Library for <strong>I</strong>mage <strong>A</strong>nalysis</h1>
+
+<h3>
+<a id="what" class="anchor" href="#what" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What?</h3>
+
+<p>A C++11 library for efficient hierarchical image segmentation. </p>
+
+<p>Please cite the following papers accordingly if you use the code: </p>
+
+<ul>
+<li><p>T. Liu, C. Jones, M. Seyedhosseini, T. Tasdizen. A modular hierarchical approach to 3D electron microscopy image segmentation. Journal of Neuroscience Methods, 226, pp. 88--102, 2014.</p></li>
+<li><p>T. Liu, E. Jurrus, M. Seyedhosseini, T. Tasdizen. Watershed merge tree classification for electron microscopy image segmentation. ICPR 2012.</p></li>
+<li><p>T. Liu, M. Seyedhosseini, T. Tasdizen. Image segmentation using hierarchical merge tree. arXiv: 1505.06389v2, 2015.</p></li>
+</ul>
+
+<h3>
+<a id="how" class="anchor" href="#how" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How?</h3>
+
+<p>Use a modern compiler with C++11 support, e.g., GCC-4.8 or higher and Apple LLVM 6.</p>
+
+<p>Dependencies:</p>
+
+<ul>
+<li>InsightToolkit (ITK).</li>
+<li>Boost C++ libraries.</li>
+<li>Eigen.</li>
+</ul>
+
+<p>Instructions:</p>
+
+<ul>
+<li>Use '-DCMAKE_CXX_FLAGS=-std=c++11' for the first time ITK CMake configuration.</li>
+<li>Turn on 'ITKReview' module for ITK.</li>
+<li>Enable C++11 for Boost libraries.</li>
+</ul>
+
+<p>CMake configurations:</p>
+
+<ul>
+<li>Turn on 'GLIA_MT' to use OpenMP parallelization.</li>
+<li>Work on 3D/2D images with 'GLIA_3D' turned on/off.</li>
+<li>Turn on 'GLIA_BUILD_{HMT,GADGET,ML_RF}' modules accordingly.</li>
+<li>The random forest classifier used in our code is based on work of Andy Liaw (<a href="https://cran.r-project.org/web/packages/randomForest/index.html">https://cran.r-project.org/web/packages/randomForest/index.html</a>). To use the related functionalities, please set 'RF_SRC_DIR' as the path to 'randomForest/src/' folder in their code.</li>
+</ul>
+
+<h3>
+<a id="who" class="anchor" href="#who" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Who?</h3>
+
+<ul>
+<li>Ting Liu &lt;<a href="mailto:tingianliu@gmail.com">tingianliu@gmail.com</a>&gt;</li>
+</ul>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
