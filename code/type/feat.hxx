@@ -80,7 +80,7 @@ class RegionShapeFeats : public Object {
     area = sdivide(area, normalizingArea, 0.0);
     perim = sdivide(perim, normalizingLength, 0.0);
     BoundingBox<D> bb;
-    alg::boundingBox(bb, region);
+    alg::getBoundingBox(bb, region);
     bboxArea = 1.0;
     for (int i = 0; i < D; ++i) {
       bboxSize[i] = sdivide(bb[i], normalizingLength, 0.0);
@@ -91,31 +91,18 @@ class RegionShapeFeats : public Object {
 };
 
 
-// Region shape difference features
 class RegionShapeDiffFeats : public Object {
  public:
   typedef RegionShapeDiffFeats Self;
-  const uint dim = 11;
+  const uint dim = 6;
   double areaDiff = 0.0, rAreaDiff0 = 0.0, rAreaDiff1 = 0.0;
   double perimDiff = 0.0, rPerimDiff0 = 0.0, rPerimDiff1 = 0.0;
-  double boundaryLength = 0.0;
-  double rBoundaryLengthArea0 = 0.0, rBoundaryLengthArea1 = 0.0;
-  double rBoundaryLengthPerim0 = 0.0, rBoundaryLengthPerim1 = 0.0;
 
   ~RegionShapeDiffFeats () override {}
 
   virtual void log () {
     areaDiff = slog(areaDiff, 0.0);
-    // rAreaDiff0 = slog(rAreaDiff0, LOG_FEPS);
-    // rAreaDiff1 = slog(rAreaDiff0, LOG_FEPS);
     perimDiff = slog(perimDiff, 0.0);
-    // rPerimDiff0 = slog(rPerimDiff0, LOG_FEPS);
-    // rPerimDiff1 = slog(rPerimDiff1, LOG_FEPS);
-    boundaryLength = slog(boundaryLength, 0.0);
-    // rBoundaryLengthArea0 = slog(rBoundaryLengthArea0, LOG_FEPS);
-    // rBoundaryLengthArea1 = slog(rBoundaryLengthArea1, LOG_FEPS);
-    // rBoundaryLengthPerim0 = slog(rBoundaryLengthPerim0, LOG_FEPS);
-    // rBoundaryLengthPerim1 = slog(rBoundaryLengthPerim1, LOG_FEPS);
   }
 
   virtual void serialize (std::vector<FVal>& feats) const {
@@ -126,6 +113,50 @@ class RegionShapeDiffFeats : public Object {
     feats.push_back(perimDiff);
     feats.push_back(rPerimDiff0);
     feats.push_back(rPerimDiff1);
+  }
+
+  friend std::ostream& operator<< (std::ostream& os, Self const& f) {
+    return os << f.areaDiff << " " << f.rAreaDiff0 << " "
+              << f.rAreaDiff1 << " " << f.perimDiff << " "
+              << f.rPerimDiff0 << " " << f.rPerimDiff1;
+  }
+
+  void generate (
+      RegionShapeFeats const& rf0, RegionShapeFeats const& rf1) {
+    areaDiff = std::fabs(rf0.area - rf1.area);
+    rAreaDiff0 = sdivide(areaDiff, rf0.area, 0.0);
+    rAreaDiff1 = sdivide(areaDiff, rf1.area, 0.0);
+    perimDiff = std::fabs(rf0.perim - rf1.perim);
+    rPerimDiff0 = sdivide(perimDiff, rf0.perim, 0.0);
+    rPerimDiff1 = sdivide(perimDiff, rf1.perim, 0.0);
+  }
+};
+
+
+// Region shape difference features
+class RegionShapeIntraDiffFeats : public RegionShapeDiffFeats {
+ public:
+  typedef RegionShapeDiffFeats Super;
+  typedef RegionShapeIntraDiffFeats Self;
+  const uint dim = Super::dim + 5;
+  double boundaryLength = 0.0;
+  double rBoundaryLengthArea0 = 0.0, rBoundaryLengthArea1 = 0.0;
+  double rBoundaryLengthPerim0 = 0.0, rBoundaryLengthPerim1 = 0.0;
+
+  ~RegionShapeIntraDiffFeats () override {}
+
+  virtual void log () {
+    Super::log();
+    boundaryLength = slog(boundaryLength, 0.0);
+    // rBoundaryLengthArea0 = slog(rBoundaryLengthArea0, LOG_FEPS);
+    // rBoundaryLengthArea1 = slog(rBoundaryLengthArea1, LOG_FEPS);
+    // rBoundaryLengthPerim0 = slog(rBoundaryLengthPerim0, LOG_FEPS);
+    // rBoundaryLengthPerim1 = slog(rBoundaryLengthPerim1, LOG_FEPS);
+  }
+
+  virtual void serialize (std::vector<FVal>& feats) const {
+    feats.reserve(feats.size() + dim);
+    Super::serialize(feats);
     feats.push_back(boundaryLength);
     feats.push_back(rBoundaryLengthArea0);
     feats.push_back(rBoundaryLengthArea1);
@@ -134,9 +165,7 @@ class RegionShapeDiffFeats : public Object {
   }
 
   friend std::ostream& operator<< (std::ostream& os, Self const& f) {
-    return os << f.areaDiff << " " << f.rAreaDiff0 << " "
-              << f.rAreaDiff1 << " " << f.perimDiff << " "
-              << f.rPerimDiff0 << " " << f.rPerimDiff1 << " "
+    return os << static_cast<Super const&>(f)
               << f.boundaryLength << " "
               << f.rBoundaryLengthArea0 << " "
               << f.rBoundaryLengthArea1 << " "
@@ -147,18 +176,113 @@ class RegionShapeDiffFeats : public Object {
   template <typename TPoints> void
   generate (TPoints const& boundary, RegionShapeFeats const& rf0,
             RegionShapeFeats const& rf1, double normalizingLength) {
-    areaDiff = std::fabs(rf0.area - rf1.area);
-    rAreaDiff0 = sdivide(areaDiff, rf0.area, 0.0);
-    rAreaDiff1 = sdivide(areaDiff, rf1.area, 0.0);
-    perimDiff = std::fabs(rf0.perim - rf1.perim);
-    rPerimDiff0 = sdivide(perimDiff, rf0.perim, 0.0);
-    rPerimDiff1 = sdivide(perimDiff, rf1.perim, 0.0);
+    Super::generate(rf0, rf1);
     boundaryLength = sdivide(
         std::ceil(boundary.size() / 2.0), normalizingLength, 0.0);
     rBoundaryLengthArea0 = sdivide(boundaryLength, rf0.area, 0.0);
     rBoundaryLengthArea1 = sdivide(boundaryLength, rf1.area, 0.0);
     rBoundaryLengthPerim0 = sdivide(boundaryLength, rf0.perim, 0.0);
     rBoundaryLengthPerim1 = sdivide(boundaryLength, rf1.perim, 0.0);
+  }
+};
+
+
+// Only support 2D regions for now
+class RegionAdvShapeFeats2D : public Object {
+ public:
+  typedef RegionAdvShapeFeats2D Self;
+  const uint dim = 15;
+  std::array<double, 7> centralMoments;
+  std::array<double, 7> huMoments;
+  double eccentricity;
+
+  ~RegionAdvShapeFeats2D () override {}
+
+  virtual void log ()
+  { for (double& x : centralMoments) { x = slog(x, 0.0); } }
+
+  virtual void serialize (std::vector<FVal>& feats) const {
+    feats.reserve(feats.size() + dim);
+    std::copy(
+        centralMoments.begin(), centralMoments.end(),
+        std::back_inserter(feats));
+    std::copy(
+        huMoments.begin(), huMoments.end(), std::back_inserter(feats));
+    feats.push_back(eccentricity);
+  }
+
+  friend std::ostream& operator<< (std::ostream& os, Self const& f) {
+    for (double x : f.centralMoments) { os << x << " "; }
+    for (double x : f.huMoments) { os << x << " "; }
+    return os << f.eccentricity;
+  }
+
+  template <typename TKey> void
+  generate (
+      TRegion<TKey, Point<2>> const& region, fPoint<2> const& centroid,
+      double normalizingLength) {
+    alg::getCentralMoments(centralMoments, region, centroid);
+    std::array<double, 7> sims;
+    alg::getScaleInvariantMoments(sims, region.size(), centralMoments);
+    if (normalizingLength > 0.0) {
+      double normalizingLength2 = normalizingLength * normalizingLength;
+      double normalizingLength3 = normalizingLength2 * normalizingLength;
+      centralMoments[0] /= normalizingLength2;
+      centralMoments[1] /= normalizingLength3;
+      centralMoments[2] /= normalizingLength2;
+      centralMoments[3] /= normalizingLength3;
+      centralMoments[4] /= normalizingLength2;
+      centralMoments[5] /= normalizingLength2;
+      centralMoments[6] /= normalizingLength3;
+    }
+    alg::getHuMoments(huMoments, sims);
+    eccentricity = alg::getEccentricity(
+        centralMoments[0], centralMoments[2], centralMoments[4]);
+  }
+};
+
+
+// Only support 2D regions for now
+class RegionAdvShapeFeatsDiff2D : public Object {
+ public:
+  typedef RegionAdvShapeFeatsDiff2D Self;
+  const uint dim = 15;
+  std::array<double, 7> centralMomentDiff;
+  std::array<double, 7> huMomentDiff;
+  double eccentricityDiff;
+
+  ~RegionAdvShapeFeatsDiff2D () override {}
+
+  virtual void log ()
+  { for (double& x : centralMomentDiff) { x = slog(x, 0.0); } }
+
+  virtual void serialize (std::vector<FVal>& feats) const {
+    feats.reserve(feats.size() + dim);
+    std::copy(
+        centralMomentDiff.begin(), centralMomentDiff.end(),
+        std::back_inserter(feats));
+    std::copy(
+        huMomentDiff.begin(), huMomentDiff.end(),
+        std::back_inserter(feats));
+    feats.push_back(eccentricityDiff);
+  }
+
+  friend std::ostream& operator<< (std::ostream& os, Self const& f) {
+    for (double x : f.centralMomentDiff) { os << x << " "; }
+    for (double x : f.huMomentDiff) { os << x << " "; }
+    return os << f.eccentricityDiff;
+  }
+
+  void generate (
+      RegionAdvShapeFeats2D const& rf0,
+      RegionAdvShapeFeats2D const& rf1) {
+    for (int i = 0; i < 7; ++i)  {
+      centralMomentDiff[i] = std::fabs(
+          rf0.centralMoments[i] - rf1.centralMoments[i]);
+      huMomentDiff[i] = std::fabs(
+          rf0.huMoments[i] - rf1.huMoments[i]);
+    }
+    eccentricityDiff = fabs(rf0.eccentricity - rf1.eccentricity);
   }
 };
 
@@ -204,6 +328,15 @@ class RegionLocationFeats : public Object {
     double siz = region.size() * normalizingLength;
     for (int i = 0; i < regionDim; ++i) { centroid[i] /= siz; }
   }
+
+  void generate (
+      std::vector<double> const& centroid0, int size0,
+      std::vector<double> const& centroid1, int size1) {
+    for (int i = 0; i < regionDim; ++i) {
+      centroid[i] = sdivide(
+          centroid0[i] * size0 + centroid1[i] * size1, size0 + size1, 0.0);
+    }
+  }
 };
 
 
@@ -211,31 +344,31 @@ class RegionLocationDiffFeats : public Object {
  public:
   typedef RegionLocationDiffFeats Self;
   const uint dim = 1;
-  double centroidDist = 0.0;
+  double centroidDistL2 = 0.0;
 
   ~RegionLocationDiffFeats () override {}
 
   virtual void log () {
-    centroidDist = std::max(0.0, slog(centroidDist, 0.0));
+    centroidDistL2 = std::max(0.0, slog(centroidDistL2, 0.0));
   }
 
   virtual void serialize (std::vector<FVal>& feats) const {
     feats.reserve(feats.size() + dim);
-    feats.push_back(centroidDist);
+    feats.push_back(centroidDistL2);
   }
 
   friend std::ostream& operator<< (std::ostream& os, Self const& f) {
-    return os << f.centroidDist;
+    return os << f.centroidDistL2;
   }
 
   void generate (
       RegionLocationFeats const& rf0, RegionLocationFeats const& rf1) {
-    centroidDist = 0.0;
+    centroidDistL2 = 0.0;
     for (int i = 0; i < rf0.regionDim; ++i) {
       double diff = rf0.centroid[i] - rf1.centroid[i];
-      centroidDist += diff * diff;
+      centroidDistL2 += diff * diff;
     }
-    centroidDist = ssqrt(centroidDist, 0.0);
+    centroidDistL2 = ssqrt(centroidDistL2, 0.0);
   }
 };
 
@@ -276,21 +409,30 @@ class RegionSetDiffFeats : public Object {
               << f.rSetDiffArea0 << " " << f.rSetDiffArea1;
   }
 
+  void generate (double ov, double a0, double a1) {
+    overlap = ov;
+    setDiff0 = a0 - ov;
+    setDiff1 = a1 - ov;
+    symDiff = setDiff0 + setDiff1;
+    rOverlapArea0 = overlap / a0;
+    rOverlapArea1 = overlap / a1;
+    rSetDiffArea0 = setDiff0 / a0;
+    rSetDiffArea1 = setDiff1 / a1;
+  }
+
   template <typename TPoints, typename TImagePtr> void
   generate (
       TPoints const& region0, TPoints const& region1,
       double normalizingArea, TImagePtr& canvas) {
     canvas->FillBuffer(0);
-    region0.traverse([&canvas](typename TPoints::Point const& p) {
-        canvas->SetPixel(p, 1); });
+    region0.traverse(
+        [&canvas](typename TPoints::Point const& p) {
+          canvas->SetPixel(p, 1); });
     int ov = 0;
-    region1.traverse([&canvas, &ov](typename TPoints::Point const& p) {
-        if (canvas->GetPixel(p) != 0) { ++ov; }
-      });
-    overlap = ov;
-    setDiff0 = region0.size() - overlap;
-    setDiff1 = region1.size() - overlap;
-    symDiff = setDiff0 + setDiff1;
+    region1.traverse(
+        [&canvas, &ov](typename TPoints::Point const& p) {
+          if (canvas->GetPixel(p) != 0) { ++ov; } });
+    generate(ov, region0.size(), region1.size());
   }
 };
 
@@ -362,20 +504,20 @@ class ImageRegionShapeFeats : public virtual RegionShapeFeats {
 
 
 // Region shape difference features with images
-class ImageRegionShapeDiffFeats :
-      public virtual RegionShapeDiffFeats {
+class ImageRegionShapeIntraDiffFeats :
+      public virtual RegionShapeIntraDiffFeats {
  public:
-  typedef RegionShapeDiffFeats Super;
-  typedef ImageRegionShapeDiffFeats Self;
+  typedef RegionShapeIntraDiffFeats Super;
+  typedef ImageRegionShapeIntraDiffFeats Self;
   uint nThreshold = 0, dim = Super::dim;
   std::vector<double> validBoundaryLengths, rValidBoundaryLengths,
     rValidBoundaryLengthPerims0, rValidBoundaryLengthPerims1;
 
-  ImageRegionShapeDiffFeats () {}
+  ImageRegionShapeIntraDiffFeats () {}
 
-  ImageRegionShapeDiffFeats (uint nThreshold) { init(nThreshold); }
+  ImageRegionShapeIntraDiffFeats (uint nThreshold) { init(nThreshold); }
 
-  ~ImageRegionShapeDiffFeats () override {}
+  ~ImageRegionShapeIntraDiffFeats () override {}
 
   virtual void init (uint nThreshold) {
     this->nThreshold = nThreshold;

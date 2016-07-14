@@ -8,8 +8,7 @@ namespace glia {
 namespace alg {
 
 template <typename TRegion> void
-centroid (fPoint<TRegion::Point::Dimension>& c,
-          TRegion const& region)
+getCentroid (fPoint<TRegion::Point::Dimension>& c, TRegion const& region)
 {
   typedef typename TRegion::Point Point;
   c.Fill(0.0);
@@ -20,8 +19,8 @@ centroid (fPoint<TRegion::Point::Dimension>& c,
 
 
 template <typename TRegion> void
-boundingBox (BoundingBox<TRegion::Point::Dimension>& bbox,
-             TRegion const& region)
+getBoundingBox (
+    BoundingBox<TRegion::Point::Dimension>& bbox, TRegion const& region)
 {
   typedef BoundingBox<TRegion::Point::Dimension> BBox;
   itk::Index<BBox::ImageDimension>
@@ -43,9 +42,9 @@ boundingBox (BoundingBox<TRegion::Point::Dimension>& bbox,
 // Compute central moments of certain orders
 // Output moments: {m02, m03, m11, m12, m20, m21, m30}
 template <typename TKey> inline void
-centralMoments (std::array<double, 7>& ms,
-                TRegion<TKey, Point<2>> const& region,
-                fPoint<2> const& c)
+getCentralMoments (
+    std::array<double, 7>& ms, TRegion<TKey, Point<2>> const& region,
+    fPoint<2> const& c)
 {
   ms.fill(0.0);
   region.traverse([&ms, &c](Point<2> const& p) {
@@ -62,25 +61,25 @@ centralMoments (std::array<double, 7>& ms,
 }
 
 
-inline void
-scaleInvariantMoments (std::array<double, 7>& sims, double m00,
-                       std::array<double, 7> const& ms)
+inline void getScaleInvariantMoments (
+    std::array<double, 7>& sims, double m00,
+    std::array<double, 7> const& ms)
 {
   double m002 = m00 * m00, m003 = std::pow(m00, 2.5);
-  sims[0] = ms[0] / m002;
-  sims[1] = ms[1] / m003;
-  sims[2] = ms[2] / m002;
-  sims[3] = ms[3] / m003;
-  sims[4] = ms[4] / m002;
-  sims[5] = ms[5] / m003;
-  sims[6] = ms[6] / m003;
+  sims[0] = sdivide(ms[0], m002, 0.0);
+  sims[1] = sdivide(ms[1], m003, 0.0);
+  sims[2] = sdivide(ms[2], m002, 0.0);
+  sims[3] = sdivide(ms[3], m003, 0.0);
+  sims[4] = sdivide(ms[4], m002, 0.0);
+  sims[5] = sdivide(ms[5], m003, 0.0);
+  sims[6] = sdivide(ms[6], m003, 0.0);
 }
 
 
 // Input moments: {m02, m03, m11, m12, m20, m21, m30}
 // Input moments must be scale invariant
-inline void huMoments (std::array<double, 7>& hm,
-                       std::array<double, 7> const& sims)
+inline void getHuMoments (
+    std::array<double, 7>& hm, std::array<double, 7> const& sims)
 {
   double m02 = sims[0], m03 = sims[1], m11 = sims[2],
       m12 = sims[3], m20 = sims[4], m21 = sims[5], m30 = sims[6];
@@ -102,11 +101,12 @@ inline void huMoments (std::array<double, 7>& hm,
 }
 
 
-inline double eccentricity (double m02, double m11, double m20)
+inline double getEccentricity (double m02, double m11, double m20)
 {
   double a = m20 + m02;
   double b = ssqrt(std::pow(m20 - m02, 2) + 4.0 * m11 * m11, 0.0);
-  return (a + b) / (a - b + FEPS);
+  // return (a + b) / (a - b + FEPS);
+  return sdivide(a + b, a - b, 0.0);
 }
 
 };

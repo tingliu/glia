@@ -183,6 +183,79 @@ groupRegions
   remove(groups, indicesToRemove);
 }
 
+
+template <typename TSKey, typename TRKey> void
+groupRegions (
+    std::list<std::list<std::pair<TSKey, TRKey>>>& groups,
+    std::unordered_set<std::pair<TSKey, TRKey>> const& regions,
+    std::vector<
+    std::pair<std::pair<TSKey, TRKey>, std::pair<TSKey, TRKey>>>
+    const& links)
+{
+  std::unordered_map<
+    std::pair<TSKey, TRKey>,
+    typename std::list<std::list<std::pair<TSKey, TRKey>>>::iterator>
+      gmap;
+  for (auto const& r : regions) {
+    auto it = groups.emplace(groups.end());
+    it->push_back(r);
+    gmap[r] = it;
+  }
+  // // Debug
+  // int i = 0;
+  // for (auto const& g : groups) {
+  //   std::cout << "group " << i++ << ": ";
+  //   for (auto const& r : g) {
+  //     std::cout << "(" << r.first << ", " << r.second << ") ";
+  //   }
+  //   std::cout << std::endl;
+  // }
+  // for (auto const& g : gmap) {
+  //   std::cout << "gmap[(" << g.first.first << ", "
+  //             << g.first.second << ")] = {";
+  //   for (auto const& r : *g.second) {
+  //     std::cout << "(" << r.first << ", " << r.second << ") ";
+  //   }
+  //   std::cout << "}" << std::endl;
+  // }
+  // std::cout << std::endl;
+  // // ~ Debug
+  for (auto const& link : links) {
+    auto git0 = gmap.find(link.first)->second;
+    auto git1 = gmap.find(link.second)->second;
+    auto& g0 = *git0;
+    auto& g1 = *git1;
+    if (git0 != git1) {
+      for (auto const& r : g1) { gmap[r] = git0; }
+      g0.splice(g0.end(), g1);
+      groups.erase(git1);
+    }
+    // // Debug
+    // std::cout << "link = [(" << link.first.first << ", "
+    //           << link.first.second << ") -- ("
+    //           << link.second.first << ", "
+    //           << link.second.second << ")]" << std::endl;
+    // i = 0;
+    // for (auto const& g : groups) {
+    //   std::cout << "group " << i++ << ": ";
+    //   for (auto const& r : g) {
+    //     std::cout << "(" << r.first << ", " << r.second << ") ";
+    //   }
+    //   std::cout << std::endl;
+    // }
+    // for (auto const& g : gmap) {
+    //   std::cout << "gmap[(" << g.first.first << ", "
+    //             << g.first.second << ")] = {";
+    //   for (auto const& r : *g.second) {
+    //     std::cout << "(" << r.first << ", " << r.second << ") ";
+    //   }
+    //   std::cout << "}" << std::endl;
+    // }
+    // std::cout << std::endl;
+    // // ~ Debug
+  }
+}
+
 };
 
 #endif

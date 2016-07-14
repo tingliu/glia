@@ -193,6 +193,32 @@ pairStats
 }
 
 
+template <typename TInt, typename TRKey, typename TRegion,
+          typename TImagePtr> void
+pairStats (
+    TInt& nTruePos, TInt& nTrueNeg, TInt& nFalsePos, TInt& nFalseNeg,
+    std::vector<std::pair<std::pair<TRKey, TRegion const*>, TImagePtr>>
+    const& keyRegionImagePairs,
+    std::unordered_set<TImageVal<TImagePtr>> const& excluded)
+{
+  std::unordered_map<std::pair<TRKey, TImageVal<TImagePtr>>, TInt> cmap;
+  for (auto const& keyRegionImagePair : keyRegionImagePairs) {
+    keyRegionImagePair.first.second->traverse(
+        [&cmap, &keyRegionImagePair, &excluded](
+            typename TRegion::Point const& p) {
+          auto key = keyRegionImagePair.second->GetPixel(p);
+          if (excluded.count(key) == 0) {
+            ++citerator(
+                cmap, std::make_pair(
+                    keyRegionImagePair.first.first, key), 0)->second;
+          }
+        });
+  }
+  pairStats(
+      nTruePos, nTrueNeg, nFalsePos, nFalseNeg, cmap, {}, excluded);
+}
+
+
 template <typename TInt, typename TFloat, typename TRegion,
           typename TImagePtr> void
 pairF1 (TFloat& f, TFloat& prec, TFloat& rec,
@@ -276,6 +302,36 @@ getOverlap (
           ++(oit->second);
         }
       });
+}
+
+
+template <typename TImagePtr0, typename TImagePtr1,
+          typename TMaskPtr> void
+getOverlap (
+    std::unordered_map<
+    std::pair<TImageVal<TImagePtr0>, TImageVal<TImagePtr1>>, int>& cmap,
+    TImagePtr0 const& image0, TMaskPtr const& mask0,
+    std::unordered_set<TImageVal<TImagePtr0>> const& excluded0,
+    TImagePtr1 const& image1, TMaskPtr const& mask1,
+    std::unordered_set<TImageVal<TImagePtr1>> const& excluded1)
+{
+  typedef TImageVal<TImagePtr0> Key0;
+  typedef TImageVal<TImagePtr1> Key1;
+  TImageCIIt<TImagePtr0> iit0(image0, image0->GetRequestedRegion());
+  TImageCIIt<TImagePtr1> iit1(image1, image1->GetRequestedRegion());
+  while (!iit0.IsAtEnd() && !iit1.IsAtEnd()) {
+    if ((mask0.IsNull() ||
+         mask0->GetPixel(iit0.GetIndex()) != MASK_OUT_VAL) &&
+        (mask1.IsNull() ||
+         mask1->GetPixel(iit1.GetIndex()) != MASK_OUT_VAL)) {
+      auto key0 = iit0.Get();
+      auto key1 = iit1.Get();
+      if (excluded0.count(key0) == 0 && excluded1.count(key1) == 0)
+      { ++citerator(cmap, std::make_pair(key0, key1), 0)->second; }
+    }
+    ++iit0;
+    ++iit1;
+  }
 }
 
 };

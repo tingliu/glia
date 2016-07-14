@@ -132,7 +132,7 @@ class RegionFeats : public Object {
 class BoundaryFeats : public Object {
  public:
   typedef BoundaryFeats Self;
-  std::shared_ptr<glia::feat::ImageRegionShapeDiffFeats> shape;
+  std::shared_ptr<glia::feat::ImageRegionShapeIntraDiffFeats> shape;
   std::vector<std::shared_ptr<glia::feat::ImageDiffFeats>> region;
   std::vector<std::shared_ptr<glia::feat::ImageLabelDiffFeats>>
   labelRegion;
@@ -151,7 +151,7 @@ class BoundaryFeats : public Object {
     return ret;
   }
 
-  virtual void log () { shape->log(); }
+  virtual void log () { if (shape) { shape->log(); } }
 
   virtual void serialize (std::vector<FVal>& feats) const {
     feats.reserve(feats.size() + dim());
@@ -182,7 +182,7 @@ class BoundaryFeats : public Object {
             RegionFeats const& rf2, TImagePtr const& pbImage,
             std::vector<double> const& boundaryThresholds,
             std::vector<ImageHistPair<TImagePtr>> const& bImages) {
-    shape = std::make_shared<glia::feat::ImageRegionShapeDiffFeats>();
+    shape = std::make_shared<glia::feat::ImageRegionShapeIntraDiffFeats>();
     shape->generate(b, normalizingLength, *rf0.shape,
                     *rf1.shape, pbImage, boundaryThresholds);
     int n = rf0.region.size();

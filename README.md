@@ -10,7 +10,9 @@ Please cite the following papers accordingly if you use the code:
 
 * T. Liu, E. Jurrus, M. Seyedhosseini, T. Tasdizen. Watershed merge tree classification for electron microscopy image segmentation. ICPR 2012.
 
-* T. Liu, M. Seyedhosseini, T. Tasdizen. Image segmentation using hierarchical merge tree. arXiv: 1505.06389v2, 2015.
+* T. Liu, M. Seyedhosseini, T. Tasdizen. Image segmentation using hierarchical merge tree. arXiv: 1505.06389, 2015.
+
+* T. Liu, M. Zhang, M. Javanmardi, N. Ramesh, T. Tasdizen. SSHMT: Semi-supervised hierarchical merge tree for electron microscopy image segmentation. ECCV 2016.
 
 ### How? ###
 
@@ -32,7 +34,7 @@ CMake configurations:
 
 * Turn on 'GLIA_MT' to use OpenMP parallelization.
 * Work on 3D/2D images with 'GLIA_3D' turned on/off.
-* Turn on 'GLIA_BUILD_{HMT,GADGET,ML_RF}' modules accordingly.
+* Turn on 'GLIA_BUILD_{HMT,SSHMT,LINK3D,GADGET,ML_RF}' modules accordingly.
 * The random forest classifier used in our code is based on work of Andy Liaw (https://cran.r-project.org/web/packages/randomForest/index.html). To use the related functionalities, please set 'RF_SRC_DIR' as the path to 'randomForest/src/' folder in their code.
 
 ### Who? ###

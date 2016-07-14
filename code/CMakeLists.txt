@@ -5,8 +5,10 @@ project(glia)
 option(GLIA_3D "Process 3D images other than 2D." OFF)
 option(GLIA_MT "Use multi-threading." OFF)
 option(GLIA_BUILD_HMT "Build HMT/CCHMT module." ON)
-option(GLIA_BUILD_GADGET "Build gadget module." OFF)
-option(GLIA_BUILD_ML_RF "Build random forest module" OFF)
+option(GLIA_BUILD_SSHMT "Build SSHMT module. (Requires HMT module.)" ON)
+option(GLIA_BUILD_LINK3D "Build 3D linking module. (Requires GLIA_3D=OFF.)" ON)
+option(GLIA_BUILD_GADGET "Build gadget module." ON)
+option(GLIA_BUILD_ML_RF "Build random forest module. (Requires 3rd party random forest code in place.)" OFF)
 
 if(GLIA_BUILD_ML_RF)
   set(RF_SRC_DIR "" CACHE FILEPATH "Random forest source code directory")
@@ -43,7 +45,7 @@ link_directories(${Boost_LIBRARY_DIR})
 if(GLIA_BUILD_HMT)
   option(GLIA_HMT_HIST_FEAT "Use histograms as features." OFF)
   option(GLIA_HMT_MEDIAN_FEAT "Use medians as features." OFF)
-  option(GLIA_HMT_USE_RF "Use random forest for merge tree generation." OFF)
+  option(GLIA_HMT_USE_RF "Use random forest for merge tree generation. (Require 3rd party random forest code in place)" OFF)
 
   if(GLIA_HMT_HIST_FEAT)
     add_definitions(-DGLIA_USE_HISTOGRAM_AS_FEATS)
@@ -96,7 +98,43 @@ if(GLIA_BUILD_HMT)
       ${RF_SRC_DIR}/rfutils.cpp)
     target_link_libraries(merge_order_bc ${ITK_LIBRARIES} boost_program_options)
   endif(GLIA_HMT_USE_RF)
+  
+  # SSHMT
+  if(GLIA_BUILD_SSHMT)
+    add_executable(bc_rc_label_ji hmt/main_bc_rc_label_ji.cxx)
+    target_link_libraries(bc_rc_label_ji ${ITK_LIBRARIES} boost_program_options)
+  
+    add_executable(train_sshmt_logsig sshmt/main_train_sshmt_logsig.cxx)
+    target_link_libraries(train_sshmt_logsig boost_program_options)
+
+    add_executable(train_sshmt_mlp sshmt/main_train_sshmt_mlp.cxx)
+    target_link_libraries(train_sshmt_mlp boost_program_options)
+  
+    add_executable(pred_logsig sshmt/main_pred_logsig.cxx)
+    target_link_libraries(pred_logsig boost_program_options)
+
+    add_executable(pred_mlp sshmt/main_pred_mlp.cxx)
+    target_link_libraries(pred_mlp boost_program_options)
+  endif(GLIA_BUILD_SSHMT)
 endif(GLIA_BUILD_HMT)
+
+# 3D Linking
+if((NOT GLIA_3D) AND GLIA_BUILD_LINK3D)
+  add_executable(gen_region_pairs gadget/main_gen_region_pairs)
+  target_link_libraries(gen_region_pairs ${ITK_LIBRARIES} boost_program_options)
+
+  add_executable(sc_feat hmt/main_sc_feat.cxx)
+  target_link_libraries(sc_feat ${ITK_LIBRARIES} boost_program_options)
+
+  add_executable(sc_label_ri hmt/main_sc_label_ri.cxx)
+  target_link_libraries(sc_label_ri ${ITK_LIBRARIES} boost_program_options)
+
+  add_executable(link_by_threshold gadget/main_link_by_threshold)
+  target_link_libraries(link_by_threshold boost_program_options)
+
+  add_executable(group_region_profiles gadget/main_group_region_profiles)
+  target_link_libraries(group_region_profiles ${ITK_LIBRARIES} boost_program_options)
+endif((NOT GLIA_3D) AND GLIA_BUILD_LINK3D)
 
 # Gadget
 if(GLIA_BUILD_GADGET)

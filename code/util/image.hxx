@@ -25,6 +25,8 @@
 #include "itkSliceBySliceImageFilter.h"
 #include "itkLabelImageToLabelMapFilter.h"
 #include "itkLabelMapOverlayImageFilter.h"
+#include "itkTileImageFilter.h"
+#include "itkExtractImageFilter.h"
 
 namespace glia {
 
@@ -368,19 +370,6 @@ labelIdentityConnectedComponents
     ++oit;
   }
   return ret;
-}
-
-
-template <typename TImagePtr> void
-relabelImage (TImagePtr& image, int minSize)
-{
-  typedef TImage<TImagePtr> Image;
-  auto relabeler = itk::RelabelComponentImageFilter<Image, Image>::New();
-  relabeler->InPlaceOn();
-  relabeler->SetInput(image);
-  if (minSize > 0) { relabeler->SetMinimumObjectSize(minSize); }
-  relabeler->Update();
-  image = relabeler->GetOutput();
 }
 
 
@@ -996,6 +985,106 @@ getImagePatches (std::vector<std::vector<T>>& patches,
       { patches.back().push_back(iit.GetPixel(i)); }
     }
   }
+}
+
+
+template <typename TImagePtr> void
+relabelImage (TImagePtr& image, int minSize)
+{
+  typedef TImage<TImagePtr> Image;
+  auto relabeler = itk::RelabelComponentImageFilter<Image, Image>::New();
+  relabeler->InPlaceOn();
+  relabeler->SetInput(image);
+  if (minSize > 0) { relabeler->SetMinimumObjectSize(minSize); }
+  relabeler->Update();
+  image = relabeler->GetOutput();
+}
+
+
+template <typename TImagePtr, typename TMaskPtr> void
+relabelImages (
+    std::vector<TImagePtr>& images, std::vector<TMaskPtr> const& masks,
+    int minSize)
+{
+  typedef TImageVal<TImagePtr> TVal;
+  std::unordered_map<TVal, uint> cmap;
+  int n = images.size();
+  for (int i = 0; i < n; ++i) { genCountMap(cmap, images[i], masks[i]); }
+  std::vector<std::pair<uint, TVal>> ckeys;
+  ckeys.reserve(cmap.size());
+  for (auto const& cp : cmap)
+  { ckeys.push_back(std::make_pair(cp.second, cp.first)); }
+  std::sort(ckeys.begin(), ckeys.end(), inv_comp<std::pair<uint, TVal>>);
+  std::unordered_map<TVal, TVal> lmap;
+  TVal newKey = 1;
+  for (auto const& ck : ckeys)
+  { lmap[ck.second] = ck.first >= minSize ? newKey++ : BG_VAL; }
+  for (int i = 0; i < n; ++i)
+  { transformImage(images[i], lmap, masks[i]); }
+}
+
+
+// layout: e.g. use {1, 1, 0} to stack 2D into 3D
+// See: https://itk.org/ITKExamples/src/Filtering/ImageGrid"
+//   "/Create3DVolume/Documentation.html
+template <UInt DOut, typename TImagePtr>
+typename itk::Image<TImageVal<TImagePtr>, DOut>::Pointer
+tileImages (
+    std::vector<TImagePtr> const& images,
+    std::array<int, DOut> const& layout)
+{
+  typedef TImageVal<TImagePtr> TVal;
+  typedef itk::Image<TVal, TImage<TImagePtr>::ImageDimension> InputImage;
+  typedef itk::Image<TVal, DOut> OutputImage;
+  typedef itk::TileImageFilter<InputImage, OutputImage> TF;
+  auto tf = TF::New();
+  itk::FixedArray<uint, DOut> _layout;
+  for (int i = 0; i < DOut; ++i) { _layout[i] = layout[i]; }
+  tf->SetLayout(_layout);
+  for (int i = 0; i < images.size(); ++i) { tf->SetInput(i, images[i]); }
+  tf->SetDefaultPixelValue(BG_VAL);
+  tf->Update();
+  return tf->GetOutput();
+}
+
+
+
+// Shortcut for simply stacking images
+template <typename TImagePtr>
+typename itk::Image<
+  TImageVal<TImagePtr>, TImage<TImagePtr>::ImageDimension + 1>::Pointer
+stackImages (std::vector<TImagePtr> const& images)
+{
+  const UInt DOut = TImage<TImagePtr>::ImageDimension + 1;
+  std::array<int, DOut> layout;
+  layout.fill(1);
+  layout.back() = 0;
+  return tileImages(images, layout);
+}
+
+
+// E.g., to get 4x4x4 3D subvolume at [x, y, z, 2] from 4x4x4x4 4D volume
+// Use start = {0, 0, 0, 2} and size = {4, 4, 4, 0}
+// See: https://itk.org/Doxygen/html/classitk_1_1ExtractImageFilter.html
+template <UInt DOut, typename TImagePtr>
+typename itk::Image<TImageVal<TImagePtr>, DOut>::Pointer
+extractImage (
+    TImagePtr const& image, std::vector<int> const& start,
+    std::vector<int> const& size)
+{
+  typedef TImage<TImagePtr> InputImage;
+  typedef itk::Image<TImageVal<TImagePtr>, DOut> OutputImage;
+  typename InputImage::IndexType _start;
+  for (int i = 0; i < start.size(); ++i) { _start[i] = start[i]; }
+  typename InputImage::SizeType _size;
+  for (int i = 0; i < size.size(); ++i) { _size[i] = size[i]; }
+  typename InputImage::RegionType region(_start, _size);
+  auto ef = itk::ExtractImageFilter<InputImage, OutputImage>::New();
+  ef->SetExtractionRegion(region);
+  ef->SetInput(image);
+  ef->SetDirectionCollapseToIdentity();
+  ef->Update();
+  return ef->GetOutput();
 }
 
 };
