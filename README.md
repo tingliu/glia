@@ -10,7 +10,7 @@ Please cite the following papers accordingly if you use the code:
 
 * T. Liu, E. Jurrus, M. Seyedhosseini, T. Tasdizen. Watershed merge tree classification for electron microscopy image segmentation. ICPR 2012.
 
-* T. Liu, M. Seyedhosseini, T. Tasdizen. Image segmentation using hierarchical merge tree. arXiv: 1505.06389, 2015.
+* T. Liu, M. Seyedhosseini, T. Tasdizen. Image segmentation using hierarchical merge tree. IEEE Transactions on Image Processing, 25, pp. 4596--4607, 2016.
 
 * T. Liu, M. Zhang, M. Javanmardi, N. Ramesh, T. Tasdizen. SSHMT: Semi-supervised hierarchical merge tree for electron microscopy image segmentation. ECCV 2016.
 
