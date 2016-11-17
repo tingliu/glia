@@ -208,7 +208,7 @@ class MonotonicDNF : public opt::TFunction<Eigen::MatrixXd> {
     if (n == 0) { return 0.0; }
     Eigen::Map<Eigen::MatrixXd> fxMat =
         createEmptyEigenMatrixMap(_m_fxMat, n, n + 1);
-    for (int i = 0; i < n; ++i) { fxMat.rightCols(1)(i) = f(x.col(i)); }
+    for (int i = 0; i < n; ++i) { fxMat.rightCols<1>()(i) = f(x.col(i)); }
     // // Trial
     // if (DO_WEIRD_STUFF) {
     //   bool isConsistent = true;
@@ -244,7 +244,7 @@ class MonotonicDNF : public opt::TFunction<Eigen::MatrixXd> {
     Eigen::Map<Eigen::MatrixXd> gxMat =
         createEmptyEigenMatrixMap(_m_gxMat, d, n);
     for (int i = 0; i < n; ++i)
-    { fxMat.rightCols(1)(i) = f(gxMat.col(i).data(), x.col(i)); }
+    { fxMat.rightCols<1>()(i) = f(gxMat.col(i).data(), x.col(i)); }
     // // Trial
     // if (DO_WEIRD_STUFF) {
     //   bool isConsistent = true;
