@@ -35,7 +35,7 @@ CMake configurations:
 * Turn on 'GLIA_MT' to use OpenMP parallelization.
 * Work on 3D/2D images with 'GLIA_3D' turned on/off.
 * Turn on 'GLIA_BUILD_{HMT,SSHMT,LINK3D,GADGET,ML_RF}' modules accordingly.
-* The random forest classifier used in our code is based on work of Abhishek Jaiantilal's R-to-MATLAB migration (https://github.com/ajaiantilal/randomforest-matlab) of random forest. To use the related functionalities, please turn on 'GLIA_BUILD_ML_RF' and 'GLIA_HMT_USE_RF', and set 'RF_SRC_DIR' as the path to 'RF_Class_C/src/' folder in their code.
+* The random forest classifier used in our code is based on Abhishek Jaiantilal's R-to-MATLAB migration (https://github.com/ajaiantilal/randomforest-matlab) of random forest. To use the related functionalities, please turn on 'GLIA_BUILD_ML_RF' and 'GLIA_HMT_USE_RF', and set 'RF_SRC_DIR' as the path to 'RF_Class_C/src/' folder in their code.
 
 ### Who? ###
 
