@@ -44,8 +44,8 @@ hist (std::vector<double>& h, std::vector<uint>& hc,
 {
   histc(hc, image, points, bin, range);
   uint n = points.size();
+  h.resize(bin, 0.0);
   if (n == 0) {
-    h.resize(bin, 0.0);
     return;
   }
   std::transform(hc.begin(), hc.end(), h.begin(),
