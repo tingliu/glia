@@ -124,8 +124,8 @@ hist (std::vector<double>& h, std::vector<uint>& hc,
 {
   histc(hc, data, bin, range);
   uint n = data.size();
+  h.resize(bin, 0.0);
   if (n == 0) {
-    h.resize(bin, 0.0);
     return;
   }
   std::transform(hc.begin(), hc.end(), h.begin(),
